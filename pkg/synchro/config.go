@@ -133,7 +133,7 @@ func (c *Config) WalkObjects() {
 func (c *Config) ObjectWorker(i int) {
 	fmt.Printf("Object worker %d started ....\n", i)
 	for ob := range c.objects {
-		fmt.Printf("%d)\tObject .%s\n", i, *ob.Key)
+		fmt.Printf("%d)\tObject : %s\n", i, *ob.Key)
 	}
 	fmt.Printf("Object worker %d stopped ....\n", i)
 	c.wait.Done()
