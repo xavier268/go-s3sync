@@ -24,8 +24,12 @@ type Config struct {
 	s3 *s3.S3
 
 	files       chan SrcFile
-	filesWait   sync.WaitGroup
 	filesConcur int
+
+	objects       chan s3.Object
+	objectsConcur int
+
+	wait sync.WaitGroup
 }
 
 // NewTestConfig provides a test configuration
@@ -44,8 +48,12 @@ func NewTestConfig() *Config {
 	}
 	c.s3 = s3.New(sess)
 
-	c.files = make(chan SrcFile, 20)
-	c.filesConcur = 10 // 10 files processed in parallel
+	c.files = make(chan SrcFile, 2000)
+	c.filesConcur = 50 // nbr of files processed in parallel
+
+	c.objects = make(chan s3.Object, 2000)
+	c.objectsConcur = 50
+
 	return c
 }
 
@@ -81,14 +89,16 @@ func (c *Config) WalkFiles() {
 	// Close channel,
 	// all files have been sent.
 	close(c.files)
-
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println("FileWalker finished walking the files")
+	c.wait.Done()
 }
 
 // FileWorker processes files from the channel.
-// There would typically be multiple file workers.
+// There are typically  multiple workers running in parallel.
 func (c *Config) FileWorker(i int) {
 	fmt.Printf("Fileworker %d started ..........\n", i)
 
@@ -97,5 +107,34 @@ func (c *Config) FileWorker(i int) {
 		time.Sleep(100 * time.Millisecond)
 	}
 	fmt.Printf("Fileworker %d finished ..........\n", i)
-	c.filesWait.Done()
+	c.wait.Done()
+}
+
+// WalkObjects will push the s3 objects in a channel for further processing.
+// It closes the object channel and call c.wait.Done() when finished.
+func (c *Config) WalkObjects() {
+
+	li := new(s3.ListObjectsV2Input).SetBucket(c.targetBucket)
+	c.s3.ListObjectsV2Pages(li, func(res *s3.ListObjectsV2Output, lastpage bool) bool {
+
+		for _, o := range res.Contents {
+			c.objects <- *o
+		}
+		return !lastpage
+	})
+
+	close(c.objects)
+	fmt.Println("Finished walking objects")
+	c.wait.Done()
+}
+
+// ObjectWorker processes the objects.
+// There are typically  multiple  workers running in parallel.
+func (c *Config) ObjectWorker(i int) {
+	fmt.Printf("Object worker %d started ....\n", i)
+	for ob := range c.objects {
+		fmt.Printf("%d)\tObject .%s\n", i, *ob.Key)
+	}
+	fmt.Printf("Object worker %d stopped ....\n", i)
+	c.wait.Done()
 }

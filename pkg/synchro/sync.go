@@ -25,18 +25,24 @@ func newS3(c *Config) *s3.S3 {
 func Check(c *Config) {
 
 	// Start pushing files into the files channel
-	// Will close channel when all files are sent
+	// Will close channel and call c.filesWait.Done() upon completion
+	c.wait.Add(2)
 	go c.WalkFiles()
+	go c.WalkObjects()
 
 	// Start a couple of workers to process them
-	// Each worker call c.fileWait.Done() upon completion.
+	// Each worker calls Done()
 	for i := 0; i < c.filesConcur; i++ {
-		c.filesWait.Add(1)
+		c.wait.Add(1)
 		go c.FileWorker(i)
 	}
+	for i := 0; i < c.objectsConcur; i++ {
+		c.wait.Add(1)
+		go c.ObjectWorker(i)
+	}
 
-	// Wait until all workers are finished.
-	c.filesWait.Wait()
-	fmt.Println("File check finished")
+	// Wait until all walkers and workers are finished.
+	c.wait.Wait()
+	fmt.Println("\nCheck finished")
 
 }
