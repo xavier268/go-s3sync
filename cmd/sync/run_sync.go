@@ -3,14 +3,14 @@ package main
 import (
 	"fmt"
 
-	"github.com/go-s3sync/pkg/synchro"
+	"github.com/go-s3sync/pkg/gosync"
 )
 
 func main() {
 	fmt.Println("Synchronizing files into s3")
-	c := synchro.NewTestConfig()
+	c := gosync.NewTestConfig()
 	fmt.Printf("Configuration : %v\n", c)
 
-	synchro.Check(c)
+	gosync.Check(c)
 
 }

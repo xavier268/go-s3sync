@@ -1,4 +1,4 @@
-// Package synchro provides synchronization services between part of a file system and a s3 bucket.
+// Package gosync provides synchronization services between part of a file system and a s3 bucket.
 // It is not called sync, beacause sync is actually used !
 //
 // Here are some thoughts/notes/todos about the sync process :
@@ -20,4 +20,4 @@
 // Efficiency concerns
 // * allow for parallel uploading
 // * single, central manafgement of what needs to be destroyed/uploaded
-package synchro
+package gosync
