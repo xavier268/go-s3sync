@@ -5,14 +5,14 @@ import (
 	"sync"
 )
 
-// CheckS3 performs a sync check, checking what S3 changes will be needed.
+// CheckObjects performs a sync check, checking what S3 changes will be needed.
 // Used for debugging,  thread safe.
-func (c *Config) CheckS3() {
+func (c *Config) CheckObjects() {
 
 	// Set a new waitGroup
 	wait := new(sync.WaitGroup)
 
-	fmt.Println("CheckS3 started")
+	fmt.Println("CheckObjects started")
 
 	// Start pushing in channel
 	// Will close channel and call c.filesWait.Done() upon completion
@@ -29,7 +29,7 @@ func (c *Config) CheckS3() {
 	// Wait until all walkers and workers are finished.
 	wait.Wait()
 
-	fmt.Println("\nCheckS3 finished")
+	fmt.Println("\nCheckObjects finished")
 
 }
 

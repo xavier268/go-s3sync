@@ -13,6 +13,9 @@ import (
 // It will closes channel and calls c.wait.Done() at the end.
 func (c *Config) WalkFiles(wait *sync.WaitGroup) {
 
+	defer wait.Done()
+	defer close(c.files)
+
 	err := filepath.Walk(c.prefix,
 		func(path string, info os.FileInfo, err error) error {
 
@@ -39,15 +42,12 @@ func (c *Config) WalkFiles(wait *sync.WaitGroup) {
 			return nil
 		})
 
-	// Close channel,
-	// all files have been sent.
-	close(c.files)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("FileWalker finished walking the files")
-	wait.Done()
+
 }
 
 // FileWorker processes files from the channel.

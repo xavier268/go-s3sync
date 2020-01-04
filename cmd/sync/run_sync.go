@@ -8,10 +8,11 @@ import (
 
 func main() {
 	fmt.Println("Synchronizing files into s3")
+
 	c := gosync.NewTestConfig()
 	fmt.Printf("Configuration : %v\n", c)
 
-	c.CheckS3()
+	c.CheckObjects()
 	c.CheckFiles()
 
 }

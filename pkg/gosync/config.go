@@ -3,6 +3,8 @@ package gosync
 import (
 	"errors"
 	"fmt"
+	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -66,8 +68,18 @@ func (o *DstObject) String() string {
 	return res
 }
 
-// FromS3Object return a DstObject from an s3.Object
-func FromS3Object(o *s3.Object) DstObject {
+// GetAbsPath constructs the absolute path equivalent.
+func (o *DstObject) GetAbsPath(c *Config) string {
+	res := path.Join(c.prefix, o.key)
+	res, err := filepath.Abs(res)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+// DstObjectFromS3Object return a DstObject from an s3.Object
+func (c *Config) DstObjectFromS3Object(o *s3.Object) DstObject {
 	if o == nil {
 		panic(errors.New("cannot process a nil s3.object"))
 	}
@@ -82,7 +94,7 @@ func FromS3Object(o *s3.Object) DstObject {
 func NewTestConfig() *Config {
 	c := new(Config)
 	c.bucket = "bup3.photos.gandillot.com"
-	c.prefix = "/home/xavier/Desktop/"
+	c.prefix = "/home/xavier/Desk"
 	c.region = "eu-west-1"
 	c.maxKeyLength = 1000 // Name limit - real is 1024
 
