@@ -11,6 +11,7 @@ func main() {
 	c := gosync.NewTestConfig()
 	fmt.Printf("Configuration : %v\n", c)
 
-	gosync.Check(c)
+	c.CheckS3()
+	c.CheckFiles()
 
 }

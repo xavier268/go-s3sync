@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
 // WalkFiles will walk and send files through the files channel.
 // It will closes channel and calls c.wait.Done() at the end.
-func (c *Config) WalkFiles() {
+func (c *Config) WalkFiles(wait *sync.WaitGroup) {
 
 	err := filepath.Walk(c.prefix,
 		func(path string, info os.FileInfo, err error) error {
@@ -46,13 +47,13 @@ func (c *Config) WalkFiles() {
 	}
 
 	fmt.Println("FileWalker finished walking the files")
-	c.wait.Done()
+	wait.Done()
 }
 
 // FileWorker processes files from the channel.
 // There are typically  multiple workers running in parallel.
 // It calls c.wait.Done() at the end.
-func (c *Config) FileWorker(i int) {
+func (c *Config) FileWorker(i int, wait *sync.WaitGroup) {
 	fmt.Printf("Fileworker %d started ..........\n", i)
 
 	for sf := range c.files {
@@ -60,5 +61,5 @@ func (c *Config) FileWorker(i int) {
 		time.Sleep(100 * time.Millisecond)
 	}
 	fmt.Printf("Fileworker %d finished ..........\n", i)
-	c.wait.Done()
+	wait.Done()
 }

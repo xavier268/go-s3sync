@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,7 +16,7 @@ type Config struct {
 	// bucket name
 	bucket string
 	// prefix to define the root of the file system to consider
-	// also used as an implicit prefix for s3 keys
+	// also added to s3 keys to retrieve the absolute path.
 	prefix string
 	// aws region
 	region string
@@ -31,8 +30,6 @@ type Config struct {
 	files chan SrcFile
 	// Channel for processing S3 objects
 	objects chan DstObject
-	// WaitGroup used to detect when all workers are done.
-	wait sync.WaitGroup
 }
 
 // SrcFile describe the source file locally.
