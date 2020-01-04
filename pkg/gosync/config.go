@@ -2,6 +2,7 @@ package gosync
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"path"
 	"path/filepath"
@@ -25,6 +26,8 @@ type Config struct {
 	// max key length - 1024 as per aws documentation
 	maxKeyLength int
 
+	direction SyncDirection // What direction are syncing ?
+
 	// S3 client
 	s3 *s3.S3
 
@@ -32,6 +35,12 @@ type Config struct {
 	files chan SrcFile
 	// Channel for processing S3 objects
 	objects chan DstObject
+}
+
+func (c *Config) String() string {
+	s := fmt.Sprintf("Configuration :\n\tBucket:\t%s\n\tPrefix:\t%s\n\tRegion:\t%s\n",
+		c.bucket, c.prefix, c.region)
+	return s
 }
 
 // SrcFile describe the source file locally.
@@ -90,13 +99,37 @@ func (c *Config) DstObjectFromS3Object(o *s3.Object) DstObject {
 	return d
 }
 
+// NewConfig creates a new configuration,
+// with test values as default values,
+// unless overriden from cli flags.
+func NewConfig() *Config {
+
+	c := NewTestConfig()
+
+	// Define and parse flags, overriding test values
+	flag.StringVar(&c.bucket, "bucket", c.bucket, "the s3 bucket used to save the selected files")
+	flag.StringVar(&c.bucket, "b", c.bucket, "the s3 bucket used to save the selected files")
+
+	flag.StringVar(&c.prefix, "prefix", c.prefix, "the file directory to synchronize")
+	flag.StringVar(&c.prefix, "p", c.prefix, "the file directory to synchronize")
+
+	flag.StringVar(&c.region, "region", c.region, "the AWS region to use")
+
+	flag.Parse()
+
+	return c
+
+}
+
 // NewTestConfig provides a test configuration
 func NewTestConfig() *Config {
 	c := new(Config)
-	c.bucket = "bup3.photos.gandillot.com"
-	c.prefix = "/home/xavier/Desk"
+	c.bucket = "test.gandillot.com"
+	c.prefix = "/home/xavier/Desktop/test"
 	c.region = "eu-west-1"
-	c.maxKeyLength = 1000 // Name limit - real is 1024
+	c.maxKeyLength = 1000 // real limit is is 1024 per AWS documentation
+
+	c.direction = DirectionNone
 
 	sess, err := session.NewSession(
 		&aws.Config{

@@ -37,7 +37,7 @@ func (c *Config) WalkObjects(wait *sync.WaitGroup) {
 func (c *Config) ObjectWorker(i int, wait *sync.WaitGroup) {
 	fmt.Printf("Object worker %d started ....\n", i)
 	for ob := range c.objects {
-		fmt.Printf("%d)\tAction : %s\n\tObject : %s\n",
+		fmt.Printf("#%d\tAction : %s\n\tObject : %s\n",
 			i,
 			c.CheckObject(ob),
 			ob.String())
@@ -52,10 +52,16 @@ func (c *Config) CheckObject(o DstObject) Action {
 	ap := o.GetAbsPath(c)
 	fi, err := os.Stat(ap)
 	if err != nil || fi.IsDir() {
+		fmt.Println("No corresponding file")
 		return ActionDeleteObject
 	}
-	if fi.ModTime().Before(o.updated) && fi.Size() == o.size {
-		return ActionNone
+	if fi.Size() != o.size {
+		fmt.Println("File and object size do not match")
+		return ActionUploadFile
 	}
-	return ActionUploadFile
+	if fi.ModTime().After(o.updated) {
+		fmt.Println("File was modified after being saved")
+		return ActionUploadFile
+	}
+	return ActionNone
 }

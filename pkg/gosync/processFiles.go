@@ -6,7 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 // WalkFiles will walk and send files through the files channel.
@@ -57,9 +59,35 @@ func (c *Config) FileWorker(i int, wait *sync.WaitGroup) {
 	fmt.Printf("Fileworker %d started ..........\n", i)
 
 	for sf := range c.files {
-		fmt.Printf("%d)\t%s\n", i, sf.String())
-		time.Sleep(100 * time.Millisecond)
+		fmt.Printf("#%d\t%v\n\t%s\n", i, c.CheckFile(sf), sf.String())
+
 	}
 	fmt.Printf("Fileworker %d finished ..........\n", i)
 	wait.Done()
+}
+
+// CheckFile will check the file againts the S3 bucket,
+// returning the Action needed.
+func (c *Config) CheckFile(sf SrcFile) Action {
+
+	if sf.absPath == "" {
+		return ActionNone
+	}
+	out, err := c.s3.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(c.GetKey(sf)),
+	})
+	if err != nil {
+		fmt.Println("Object was not found")
+		return ActionUploadFile
+	}
+	if *out.ContentLength != sf.size {
+		fmt.Println("Size of remote object does not match")
+		return ActionUploadFile
+	}
+	if out.LastModified.Before(sf.updated) {
+		fmt.Println("File is more recent than object")
+		return ActionUploadFile
+	}
+	return ActionNone
 }
