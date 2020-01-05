@@ -26,8 +26,12 @@ type Config struct {
 	// max key length - 1024 as per aws documentation
 	maxKeyLength int
 
-	direction SyncDirection // What direction are syncing ?
+	// What mode are syncing ?
+	// Do we actually modify things or is it a "mock" operation ?
+	mode Mode
 
+	// S3 session
+	sess *session.Session
 	// S3 client
 	s3 *s3.S3
 
@@ -38,8 +42,8 @@ type Config struct {
 }
 
 func (c *Config) String() string {
-	s := fmt.Sprintf("Configuration :\n\tBucket:\t%s\n\tPrefix:\t%s\n\tRegion:\t%s\n",
-		c.bucket, c.prefix, c.region)
+	s := fmt.Sprintf("Configuration :\n\tMode:\t%s\n\tBucket:\t%s\n\tPrefix:\t%s\n\tRegion:\t%s\n",
+		c.mode.String(), c.bucket, c.prefix, c.region)
 	return s
 }
 
@@ -102,9 +106,12 @@ func (c *Config) DstObjectFromS3Object(o *s3.Object) DstObject {
 // NewConfig creates a new configuration,
 // with test values as default values,
 // unless overriden from cli flags.
+// NB : since this is parsing the cli, can be called only once -
+// and it's a feature, not a bug,
+// intended to discourage simultaneous processing with different configs
 func NewConfig() *Config {
 
-	c := NewTestConfig()
+	c := NewDefaultConfig()
 
 	// Define and parse flags, overriding test values
 	flag.StringVar(&c.bucket, "bucket", c.bucket, "the s3 bucket used to save the selected files")
@@ -121,17 +128,19 @@ func NewConfig() *Config {
 
 }
 
-// NewTestConfig provides a test configuration
-func NewTestConfig() *Config {
+// NewDefaultConfig provides a default configuration
+func NewDefaultConfig() *Config {
+	var err error
+
 	c := new(Config)
 	c.bucket = "test.gandillot.com"
 	c.prefix = "/home/xavier/Desktop/test"
 	c.region = "eu-west-1"
 	c.maxKeyLength = 1000 // real limit is is 1024 per AWS documentation
 
-	c.direction = DirectionNone
+	c.mode = ModeBackupMock
 
-	sess, err := session.NewSession(
+	c.sess, err = session.NewSession(
 		&aws.Config{
 			Region: aws.String(c.region),
 		})
@@ -139,10 +148,16 @@ func NewTestConfig() *Config {
 		panic(err)
 	}
 
-	c.s3 = s3.New(sess)
+	c.s3 = s3.New(c.sess)
 
 	c.files = make(chan SrcFile, 2000)
 	c.objects = make(chan DstObject, 2000)
 
+	return c
+}
+
+// SetMode sets the mode for the sync operation.
+func (c *Config) SetMode(m Mode) *Config {
+	c.mode = m
 	return c
 }
