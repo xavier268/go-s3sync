@@ -23,4 +23,6 @@
 package gosync
 
 // TODO : faire le "process object" en mode backup/restore
+// TODO : reduire l'API publique au minimum
+// TODO : Renommer Check ...
 // TODO : test, test, test ..
