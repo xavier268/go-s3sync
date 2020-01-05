@@ -21,3 +21,6 @@
 // * allow for parallel uploading
 // * single, central manafgement of what needs to be destroyed/uploaded
 package gosync
+
+// TODO : faire le "process object" en mode backup/restore
+// TODO : test, test, test ..

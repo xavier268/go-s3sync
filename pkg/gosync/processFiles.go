@@ -163,29 +163,3 @@ func (c *Config) DownloadObject(sf SrcFile) {
 		panic(err)
 	}
 }
-
-// ProcessFile will check the file againts the S3 bucket,
-// returning the Action needed.
-func (c *Config) ProcessFile(sf SrcFile) Action {
-
-	if sf.absPath == "" {
-		return ActionNone
-	}
-	out, err := c.s3.HeadObject(&s3.HeadObjectInput{
-		Bucket: aws.String(c.bucket),
-		Key:    aws.String(c.GetKey(sf)),
-	})
-	if err != nil {
-		fmt.Println("Object was not found")
-		return ActionUploadFile
-	}
-	if *out.ContentLength != sf.size {
-		fmt.Println("Size of remote object does not match")
-		return ActionUploadFile
-	}
-	if out.LastModified.Before(sf.updated) {
-		fmt.Println("File is more recent than object")
-		return ActionUploadFile
-	}
-	return ActionNone
-}
