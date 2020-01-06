@@ -12,7 +12,36 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
+// ProcessFiles performs a check on all files,
+// checking what files or S3 objects should be changed.
+func (c *Config) ProcessFiles() {
+
+	// Set a new waitGroup
+	wait := new(sync.WaitGroup)
+
+	fmt.Println("CheckFiles started")
+
+	// Start a couple of workers to process them
+	// Each worker calls Done() when channel is closed.
+	for i := 0; i < 10; i++ {
+		wait.Add(1)
+		go c.FileWorker(i, wait)
+	}
+
+	// Start pushing in channel
+	// Will close channel and call c.filesWait.Done() upon completion
+	wait.Add(1)
+	go c.WalkFiles(wait)
+
+	// Wait until all walkers and workers are finished.
+	wait.Wait()
+
+	fmt.Println("\nCheckFiles finished")
+
+}
+
 // WalkFiles will walk and send files through the files channel.
+// Directories are ignored, only the files inside are processed.
 // It will closes channel and calls c.wait.Done() at the end.
 func (c *Config) WalkFiles(wait *sync.WaitGroup) {
 
@@ -26,7 +55,7 @@ func (c *Config) WalkFiles(wait *sync.WaitGroup) {
 				return err
 			}
 			if info.IsDir() {
-				// Just ignore dirs
+				// Just ignore dirs, do nothing
 				return nil
 			}
 			i := *new(SrcFile)
@@ -87,17 +116,19 @@ func (c *Config) FileWorker(i int, wait *sync.WaitGroup) {
 			if err != nil { // S3 object not found ?
 				c.DeleteFile(sf)
 				fmt.Printf("\tDELETED FILE %s\n", c.mode.String())
+				break
 			}
 			if out.LastModified.UTC().Before(sf.updated) || *out.ContentLength != sf.size {
-				c.DownloadObject(sf)
-				fmt.Printf("\tDOWNLOADED OBJECT %s\n", c.mode.String())
+				c.DownloadFile(sf)
+				fmt.Printf("\tDOWNLOADED %s\n", c.mode.String())
 			}
 		case ModeRestoreMock:
 			if err != nil { // S3 object not found ?
 				fmt.Printf("\tDELETE FILE NEEDED %s\n", c.mode.String())
+				break
 			}
 			if out.LastModified.UTC().Before(sf.updated) || *out.ContentLength != sf.size {
-				fmt.Printf("\tDOWNLOAD OBJECT NEEDED %s\n", c.mode.String())
+				fmt.Printf("\tDOWNLOAD NEEDED %s\n", c.mode.String())
 			}
 
 		default:
@@ -140,9 +171,9 @@ func (c *Config) DeleteFile(sf SrcFile) {
 	}
 }
 
-// DownloadObject downloads a potentially large object from S3 to file,
+// DownloadFile downloads a potentially large object from S3 to file,
 // overwriting existing file.
-func (c *Config) DownloadObject(sf SrcFile) {
+func (c *Config) DownloadFile(sf SrcFile) {
 
 	file, err := os.Create(sf.absPath)
 	if err != nil {

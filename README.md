@@ -5,9 +5,7 @@ Efficient sync utility to aws s3
 * backup or restore modes, possibly in a mock (do-nothing) format
 
 Available commands :
-* backup
-* restore
-* mockbackup
-* mockrestore
+* backup (or backupmock, to simulate a backup)
+* restore (or restoremock, to simulate a restore)
 
 Use the -h flag to display help about avialable cli flags.
