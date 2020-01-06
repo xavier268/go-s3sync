@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-// RemoveAllEmptyDirs remove all empty directtories from the source file.
+// RemoveAllEmptyDirs remove all empty directories from the source file.
 // Mostly useful after a restore, if file folder was not initially empty.
 // Never called implicitely on backup/restore.
 // Special care is taken to ensure nested empty dirs are also removed.

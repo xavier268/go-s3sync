@@ -1,3 +1,6 @@
+[![Documentation](https://godoc.org/github.com/xavier268/go-s3sync?status.svg)](http://godoc.org/github.com/xavier268/go-s3sync)
+
+
 # go-s3sync
 
 ## What is it ?

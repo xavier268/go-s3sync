@@ -108,9 +108,9 @@ func (c *Config) dstObjectFromS3Object(o *s3.Object) DstObject {
 }
 
 // NewConfig creates a new configuration,
-// with test values as default values,
-// unless overriden from cli flags.
-// NB : since this is parsing the cli, can be called only once -
+// starting with default values,
+// then potentially overriden from CLI flags.
+// Since this is parsing the CLI, it can only be called only once -
 // and it's a feature, not a bug,
 // intended to discourage simultaneous processing with different configs
 func NewConfig() *Config {
@@ -168,13 +168,13 @@ func NewDefaultConfig() *Config {
 	return c
 }
 
-// SetMode sets the mode for the sync operation.
+// SetMode sets the mode for the sync operation (backup or restore)
 func (c *Config) SetMode(m Mode) *Config {
 	c.mode = m
 	return c
 }
 
-// SetPerm sets the permission (FileMode) when creating missing directories.
+// SetPerm sets the permission (FileMode) to use when creating missing directories.
 func (c *Config) SetPerm(dirPermission os.FileMode) *Config {
 	c.dirPerm = dirPermission
 	return c
