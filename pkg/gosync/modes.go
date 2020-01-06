@@ -40,8 +40,9 @@ type Mode int
 const (
 	ModeBackupMock Mode = iota // File => S3
 	ModeBackup
-	ModeRestore // S3 => File
-	ModeRestoreMock
+
+	ModeRestoreMock // S3 => File
+	ModeRestore
 )
 
 func (m *Mode) String() string {

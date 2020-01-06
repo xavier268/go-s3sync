@@ -17,7 +17,7 @@ func (c *Config) ProcessObjects() {
 	// Set a new waitGroup
 	wait := new(sync.WaitGroup)
 
-	fmt.Println("CheckObjects started")
+	fmt.Println("\nCheckObjects started")
 
 	// Start a couple of workers to process them
 	// Each worker calls Done() when channel is closed
@@ -79,24 +79,24 @@ func (c *Config) objectWorker(i int, wait *sync.WaitGroup) {
 			if err != nil || fi.IsDir() {
 				// no file, delete the corresponding s3 object
 				c.deleteObject(ob)
-				fmt.Printf("\tDELETED\t%s\n", c.mode.String())
+				fmt.Printf("\tDELETED\t%s\t%s\n", c.mode.String(), ob.String())
 				break
 			}
 			if fi.ModTime().UTC().After(ob.updated) || fi.Size() != ob.size {
 				// refresh needed
 				c.uploadObject(ob)
-				fmt.Printf("\tUPLOADED\t%s\n", c.mode.String())
+				fmt.Printf("\tUPLOADED\t%s\t%s\n", c.mode.String(), ob.String())
 			}
 
 		case ModeBackupMock:
 			if err != nil || fi.IsDir() {
 				// no file, delete the corresponding s3 object
-				fmt.Printf("\tDELETE NEEDED\t%s\n", c.mode.String())
+				fmt.Printf("\tDELETED\t%s\t%s\n", c.mode.String(), ob.String())
 				break
 			}
 			if fi.ModTime().UTC().After(ob.updated) || fi.Size() != ob.size {
 				// refresh needed
-				fmt.Printf("\tUPLOAD NEEDED\t%s\n", c.mode.String())
+				fmt.Printf("\tUPLOADED\t%s\t%s\n", c.mode.String(), ob.String())
 			}
 		case ModeRestore:
 			if err != nil ||
@@ -105,7 +105,7 @@ func (c *Config) objectWorker(i int, wait *sync.WaitGroup) {
 				fi.ModTime().UTC().After(ob.updated) {
 				// need to download from s3
 				c.downloadObject(ob)
-				fmt.Printf("\tDOWNLOADED\t%s\n", c.mode.String())
+				fmt.Printf("\tDOWNLOADED\t%s\t%s\n", c.mode.String(), ob.String())
 
 			}
 
@@ -115,7 +115,7 @@ func (c *Config) objectWorker(i int, wait *sync.WaitGroup) {
 				fi.Size() != ob.size ||
 				fi.ModTime().UTC().After(ob.updated) {
 				// need to download from s3
-				fmt.Printf("\tDOWNLOAD NEEDED\t%s\n", c.mode.String())
+				fmt.Printf("\tDOWNLOADED\t%s\t%s\n", c.mode.String(), ob.String())
 			}
 
 		default:

@@ -128,6 +128,13 @@ func NewConfig() *Config {
 
 	flag.Parse()
 
+	ap, err := filepath.Abs(c.prefix)
+	if err != nil {
+		fmt.Println("The provided prefix is invalid and could not be translated into an absolute path : ", c.prefix)
+		panic(err)
+	} else {
+		c.prefix = ap
+	}
 	return c
 
 }
