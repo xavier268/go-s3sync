@@ -60,9 +60,9 @@ func (s *SrcFile) String() string {
 	return res
 }
 
-// GetKey remove the efix from the absPath of a SrcFile.
+// getKey remove the efix from the absPath of a SrcFile.
 // Return empty key if prefix does not match.
-func (c *Config) GetKey(s SrcFile) string {
+func (c *Config) getKey(s SrcFile) string {
 	if !strings.HasPrefix(s.absPath, c.prefix) {
 		return ""
 	}
@@ -81,8 +81,8 @@ func (o *DstObject) String() string {
 	return res
 }
 
-// GetAbsPath constructs the absolute path equivalent.
-func (o *DstObject) GetAbsPath(c *Config) string {
+// getAbsPath constructs the absolute path equivalent.
+func (o *DstObject) getAbsPath(c *Config) string {
 	res := path.Join(c.prefix, o.key)
 	res, err := filepath.Abs(res)
 	if err != nil {
@@ -91,8 +91,8 @@ func (o *DstObject) GetAbsPath(c *Config) string {
 	return res
 }
 
-// DstObjectFromS3Object return a DstObject from an s3.Object
-func (c *Config) DstObjectFromS3Object(o *s3.Object) DstObject {
+// dstObjectFromS3Object return a DstObject from an s3.Object
+func (c *Config) dstObjectFromS3Object(o *s3.Object) DstObject {
 	if o == nil {
 		panic(errors.New("cannot process a nil s3.object"))
 	}
