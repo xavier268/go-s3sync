@@ -136,7 +136,7 @@ func NewDefaultConfig() *Config {
 	c.bucket = "test.gandillot.com"
 	c.prefix = "/home/xavier/Desktop/test"
 	c.region = "eu-west-1"
-	c.maxKeyLength = 1000 // real limit is is 1024 per AWS documentation
+	c.maxKeyLength = 1000 // real limit is 1024 per AWS documentation
 
 	c.mode = ModeBackupMock
 
