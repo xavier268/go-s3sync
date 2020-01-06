@@ -1,4 +1,4 @@
-module github.com/go-s3sync
+module github.com/xavier268/go-s3sync
 
 go 1.13
 

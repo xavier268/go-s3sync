@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/go-s3sync/pkg/gosync"
+	"github.com/xavier268/go-s3sync/pkg/gosync"
 )
 
 func main() {
