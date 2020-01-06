@@ -23,7 +23,7 @@ func TestRemoveAllContent1(t *testing.T) {
 	}
 }
 
-func TestRemoveEmptyDirs(t *testing.T) {
+func TestRemoveEmptyDirs1(t *testing.T) {
 
 	c := tConfig{NewDefaultConfig()}
 	c.removeAllFileContent()
@@ -41,6 +41,51 @@ func TestRemoveEmptyDirs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestRemoveEmptyDirs2(t *testing.T) {
+
+	c := tConfig{NewDefaultConfig()}
+	c.removeAllFileContent()
+
+	// Now, clean start ...
+
+	c.createDummyFoldersAndFiles()
+	c.RemoveAllEmptyDirs()
+	//We should NOT be empty any more ...
+	if c.isEmptyDir(c.prefix) {
+		t.Fatal("The test directory content should not be empty !")
+	}
+	// The foll<ing files should be there ...
+	_, err := os.Stat(path.Join(c.prefix, "fone", "ftwo", "two"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = os.Stat(path.Join(c.prefix, "fone", "ftwo"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = os.Stat(path.Join(c.prefix, "fone", "one"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// These should not exist anymore
+	_, err = os.Stat(path.Join(c.prefix, "fone2"))
+	if err == nil {
+		t.Fatal("File should have been removed !")
+	}
+	_, err = os.Stat(path.Join(c.prefix, "fone", "ftwo", "ftree1"))
+	if err == nil {
+		t.Fatal("File should have been removed !")
+	}
+	// but root folder should still be there ...
+	_, err = os.Stat(c.prefix)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// cleanup
+	c.removeAllFileContent()
 }
 
 // ************* utilities ******************

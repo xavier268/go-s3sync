@@ -1,10 +1,9 @@
 package gosync
 
 import (
-	"fmt"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 // RemoveAllEmptyDirs remove all empty directtories from the source file.
@@ -12,63 +11,38 @@ import (
 // Never called implicitely on backup/restore.
 // Special care is taken to ensure nested empty dirs are also removed.
 func (c *Config) RemoveAllEmptyDirs() {
-	c.clean(c.prefix)
-}
 
-// Recursively clen empty dirs from the root path.
-// root must be a dir, expressed in absolute path.
-// Cleaning will happen leaves first,
-// to ensure nested empty dires are correctly cleaned.
-func (c *Config) clean(root string) {
+	var touched bool = true
 
-	fmt.Printf("Clean is looking at dir %s\n", root)
+	// Iterated as long as we are touching something ...
+	for touched {
 
-	info, err := os.Stat(root)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+		touched = false
 
-	if !info.IsDir() {
-		// Ingnore non dirs ..
-		return
-	}
+		e2 := filepath.Walk(c.prefix,
+			func(path string, info os.FileInfo, e1 error) error {
+				if e1 != nil {
+					panic(e1)
+				}
+				if path == c.prefix {
+					// don't remove root prefix dir !
+					return nil
+				}
+				if info.IsDir() && c.isEmptyDir(path) {
+					e3 := os.Remove(path)
+					if e3 != nil {
+						panic(e3)
+					}
+					touched = true
+				}
+				return nil
+			})
 
-	// First, canvass the non empty dir recursiveley.
-	if info.IsDir() && !c.isEmptyDir(root) {
-
-		f, err := os.Open(root)
-		if err != nil {
-			panic(err)
-		}
-		defer f.Close()
-
-		dirs, err := f.Readdirnames(-1)
-		if err != nil {
-			panic(err)
-		}
-		for _, d := range dirs {
-			ad := path.Join(c.prefix, d)
-			if err != nil {
-				panic(err)
-			}
-			// recurse ...
-			c.clean(ad)
+		if e2 != nil {
+			panic(e2)
 		}
 
 	}
-
-	// Then, and only then, reevaluate if dir is empty.
-	// Nested sub-dirs might have been already removed...
-	// Whatever, but never remove the "prefix" top level dir !
-	if c.isEmptyDir(root) && root != c.prefix {
-		fmt.Printf("Removing empty dir : %s\n", root)
-		err := os.Remove(root)
-		if err != nil {
-			panic(err)
-		}
-	}
-
 }
 
 // isEmptyDir test for an empty dir
