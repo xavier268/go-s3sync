@@ -3,6 +3,7 @@ package gosync
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -41,11 +42,23 @@ func (c *Config) deleteFile(sf SrcFile) {
 // downloadFile downloads a potentially large object from S3 to file,
 // overwriting existing file.
 func (c *Config) downloadFile(sf SrcFile) {
-
+	var err error
 	file, err := os.Create(sf.absPath)
 	if err != nil {
-		fmt.Println(sf.String())
-		panic(err)
+		// Most likely, the dir does not exist,
+		// let's try to create it and retry file creation ...
+		fmt.Println("Attempting to recover from :", err)
+		dir := path.Dir(sf.absPath)
+		fmt.Printf("\nCreating directories for %s\n", dir)
+		err = os.MkdirAll(dir, c.dirPerm)
+		if err != nil {
+			panic(err)
+		}
+		file, err = os.Create(sf.absPath)
+		if err != nil {
+			fmt.Println("After successfully creating dir, error persists : ", err)
+			panic(err)
+		}
 	}
 	defer file.Close()
 

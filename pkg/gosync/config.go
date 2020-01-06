@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -29,6 +30,9 @@ type Config struct {
 	// What mode are syncing ?
 	// Do we actually modify things or is it a "mock" operation ?
 	mode Mode
+
+	// permission mode used for creating intermediate directories.
+	dirPerm os.FileMode
 
 	// S3 session
 	sess *session.Session
@@ -139,6 +143,7 @@ func NewDefaultConfig() *Config {
 	c.maxKeyLength = 1000 // real limit is 1024 per AWS documentation
 
 	c.mode = ModeBackupMock
+	c.dirPerm = 0o_0777 // all permissions to anyone ...
 
 	c.sess, err = session.NewSession(
 		&aws.Config{
@@ -159,5 +164,11 @@ func NewDefaultConfig() *Config {
 // SetMode sets the mode for the sync operation.
 func (c *Config) SetMode(m Mode) *Config {
 	c.mode = m
+	return c
+}
+
+// SetPerm sets the permission (FileMode) when creating missing directories.
+func (c *Config) SetPerm(dirPermission os.FileMode) *Config {
+	c.dirPerm = dirPermission
 	return c
 }
